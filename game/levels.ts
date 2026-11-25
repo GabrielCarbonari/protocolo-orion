@@ -92,7 +92,11 @@ export function buildJungleWorld(): void {
         });
     }
     for (const [start, end] of WATER_GAPS) {
-        spawnActor({ id: `rio-${start}`, texture: 'river', x: (start + end) / 2, y: LEVEL_ONE_GROUND + 42, width: end - start + 100, height: 70, layer: 'back', kind: 'water' });
+        const tileW = 72;
+        for (let wx = start - 36; wx < end + 36; wx += tileW) {
+            spawnActor({ id: `mar-sup-${start}-${wx}`, texture: 'mar-superficie', x: wx + tileW / 2, y: LEVEL_ONE_GROUND + 34, width: tileW, height: 70, layer: 'back', kind: 'water' });
+            spawnActor({ id: `mar-prof-${start}-${wx}`, texture: 'mar-profundo', x: wx + tileW / 2, y: LEVEL_ONE_GROUND + 96, width: tileW, height: 68, layer: 'back', kind: 'water' });
+        }
         if (start === WATER_GAPS[0]?.[0] || start === WATER_GAPS[3]?.[0] || start === WATER_GAPS[6]?.[0]) {
             addPlatform(`tronco-${start}`, 'log', (start + end) / 2, LEVEL_ONE_GROUND - 90, end - start + 20, 28, 'log', true);
         }

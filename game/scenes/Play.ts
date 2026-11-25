@@ -234,12 +234,12 @@ export const Play = {
             game.feel.shake(5, 0.28);
             if (stage === 1) {
                 for (const h of game.roster.tagged('leftHunter') as Iterable<Actor>) h.destroy();
-                const wall = spawnActor({ id: 'muralha-boss', texture: 'bunker-defensivo-pillbox', x: LEVEL_ONE_BOSS_X + 390, y: 360, width: 760, height: 514, layer: 'back', kind: 'bossBackdrop' });
-                wall.z = -1;
                 bossGate = spawnActor({ id: 'portao-muralha', texture: 'defense-gate', x: LEVEL_ONE_BOSS_X + 392, y: 426, width: 190, height: 205, layer: 'world', kind: 'bossGate' });
                 spawnActor({ id: 'sacos-muralha', texture: 'barricada-de-sacos-de-areia', x: LEVEL_ONE_BOSS_X + 390, y: 578, width: 310, height: 112, layer: 'world', kind: 'bossDecoration' });
-                spawnActor({ id: 'bateria-esquerda-muralha', texture: 'torreta-dupla-automatica', x: LEVEL_ONE_BOSS_X + 178, y: 492, width: 96, height: 76, tags: ['target', 'bossPart'], kind: 'bossBattery1', hp: 7, scoreValue: 1_500, cooldown: 1.5 });
-                spawnActor({ id: 'bateria-direita-muralha', texture: 'torreta-dupla-automatica', x: LEVEL_ONE_BOSS_X + 598, y: 458, width: 96, height: 76, tags: ['target', 'bossPart'], kind: 'bossBattery2', hp: 7, scoreValue: 1_500, cooldown: 2.1 });
+                const leftBat = spawnActor({ id: 'bateria-esquerda-muralha', texture: 'torreta-de-plasma-alienigena', x: LEVEL_ONE_BOSS_X + 178, y: 492, width: 88, height: 84, tags: ['target', 'bossPart'], kind: 'bossBattery1', hp: 7, scoreValue: 1_500, cooldown: 1.5 });
+                leftBat.sx = -1;
+                const rightBat = spawnActor({ id: 'bateria-direita-muralha', texture: 'torreta-laser-dupla-alienigena', x: LEVEL_ONE_BOSS_X + 598, y: 458, width: 90, height: 84, tags: ['target', 'bossPart'], kind: 'bossBattery2', hp: 7, scoreValue: 1_500, cooldown: 2.1 });
+                rightBat.sx = -1;
                 spawnActor({ id: 'lancador-muralha', texture: 'suporte-de-misseis', x: LEVEL_ONE_BOSS_X + 388, y: 202, width: 108, height: 52, tags: ['target', 'bossPart'], kind: 'bossLauncher', hp: 5, scoreValue: 1_200, cooldown: 3.8 });
                 bossCore = spawnActor({ id: 'nucleo-muralha', texture: 'boss-core', x: LEVEL_ONE_BOSS_X + 392, y: 416, width: 118, height: 128, tags: ['target', 'bossPart'], kind: 'bossCore1', hp: 15, scoreValue: 4_000, active: false, cooldown: 2.4 });
                 updateBossBar(STAGE_BOSSES[0], bossCore.data.hp, bossCore);
@@ -722,8 +722,11 @@ export const Play = {
             const common = { id: event.id, x: event.x, y: event.y, weapon: event.weapon };
             if (event.kind === 'infantry') spawnActor({ ...common, texture: 'infantaria-biomecanica', width: 56, height: 64, tags: ['enemy', 'target'], kind: 'infantry', hp: 2, scoreValue: 180, cooldown: 1.2 });
             else if (event.kind === 'runner') spawnActor({ ...common, texture: 'parasita-terrestre-saltador', width: 54, height: 60, tags: ['enemy', 'target'], kind: 'runner', hp: 2, scoreValue: 300, cooldown: 2.2 });
-            else if (event.kind === 'turret') spawnActor({ ...common, y: LEVEL_ONE_GROUND - 32, texture: 'torreta-dupla-automatica', width: 82, height: 64, tags: ['enemy', 'target'], kind: 'turret', hp: 3, scoreValue: 360, cooldown: 1.5 });
-            else if (event.kind === 'battery') spawnActor({ ...common, texture: 'bunker-defensivo-pillbox', width: 150, height: 102, tags: ['enemy', 'target'], kind: 'battery', hp: 5, scoreValue: 650, cooldown: 1.9 });
+            else if (event.kind === 'turret') {
+                const useDual = (event.x % 200) < 100;
+                spawnActor({ ...common, y: LEVEL_ONE_GROUND - 34, texture: useDual ? 'torreta-laser-dupla-alienigena' : 'torreta-de-plasma-alienigena', width: useDual ? 74 : 72, height: 68, tags: ['enemy', 'target'], kind: 'turret', hp: 3, scoreValue: 360, cooldown: 1.5 });
+            }
+            else if (event.kind === 'battery') spawnActor({ ...common, y: LEVEL_ONE_GROUND - 38, texture: 'torreta-biomecanica-terrestre', width: 78, height: 76, tags: ['enemy', 'target'], kind: 'battery', hp: 5, scoreValue: 650, cooldown: 1.9 });
             else if (event.kind === 'capsule') spawnActor({ ...common, texture: 'propulsor-de-reforco', x: stage === 3 ? player.x - 360 : event.x, y: stage === 3 ? player.y - 210 : event.y, width: 170, height: 62, tags: ['enemy', 'target'], kind: 'capsule', hp: 1, scoreValue: 220, cooldown: 0, vx: 94 });
             else if (event.kind === 'drone') {
                 const variant = droneIndex++;
@@ -923,6 +926,7 @@ export const Play = {
                     actor.rot = 0;
                     if (warningStep(actor, dt, 2.7, 0.9)) fireEnemy(actor, 'aimed');
                 } else if (kind === 'battery') {
+                    actor.sx = player.x < actor.x ? -1 : 1;
                     if (warningStep(actor, dt, 3.8, 1.05)) fireEnemy(actor, actor.id === 'turret-a' ? 'highShot' : 'ceilingCone');
                 } else if (kind === 'robotCannon') {
                     if (warningStep(actor, dt, Math.max(1.9, 3.5 - run.room * 0.22), 0.8)) fireEnemy(actor, 'shockSphere');

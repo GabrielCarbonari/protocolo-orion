@@ -76,20 +76,19 @@ export const Orbital = {
         run.orbitalWave = wave;
         run.orbitalCleared = false;
 
-        // Player starfighter (sprite points left, so +90 deg points nose straight up)
+        // Player starfighter (top-down sprite pointing straight up with twin wing cannons)
         const ship = spawnActor({
             id: 'caca-orion',
-            texture: 'caca-aeroespacial-orion',
+            texture: 'caca-estelar-orion',
             x: W / 2,
             y: H - ORBITAL.shipYOffset,
-            width: 98,
-            height: 36,
+            width: 74,
+            height: 80,
             layer: 'world',
             tags: ['orbitalPlayer'],
             kind: 'orbitalShip',
             hp: 1,
         });
-        ship.rot = Math.PI / 2;
 
         // 4 Space Invaders-style energy shield domes
         const domeXs = [210, 496, 784, 1070];
@@ -305,21 +304,23 @@ export const Orbital = {
                 bolt.rot = -Math.PI / 2;
                 playCrewSfx('ship-laser', 'disparo', { volume: 0.72, rate: 1.12, minGapMs: 55 });
             } else {
-                const bolt = spawnActor({
-                    id: `orb-tiro-${++shotIndex}`,
-                    texture: 'projetil-raio-laser',
-                    x: ship.x,
-                    y: noseY,
-                    width: 34,
-                    height: 12,
-                    layer: 'front',
-                    tags: ['orbitalPlayerShot'],
-                    kind: 'orbitalPlayerShot',
-                    vx: 0,
-                    vy: -ORBITAL.bulletSpeed,
-                    hp: 1,
-                });
-                bolt.rot = -Math.PI / 2;
+                for (const wingOffset of [-22, 22]) {
+                    const bolt = spawnActor({
+                        id: `orb-tiro-${++shotIndex}`,
+                        texture: 'projetil-raio-laser',
+                        x: ship.x + wingOffset,
+                        y: noseY + 12,
+                        width: 28,
+                        height: 10,
+                        layer: 'front',
+                        tags: ['orbitalPlayerShot'],
+                        kind: 'orbitalPlayerShot',
+                        vx: 0,
+                        vy: -ORBITAL.bulletSpeed,
+                        hp: 1,
+                    });
+                    bolt.rot = -Math.PI / 2;
+                }
                 playCrewSfx('ship-laser', 'disparo', { volume: 0.68, minGapMs: 60 });
             }
         }
