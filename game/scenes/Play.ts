@@ -238,7 +238,7 @@ export const Play = {
                 spawnActor({ id: 'sacos-muralha', texture: 'barricada-de-sacos-de-areia', x: LEVEL_ONE_BOSS_X + 390, y: 578, width: 310, height: 112, layer: 'world', kind: 'bossDecoration' });
                 const leftBat = spawnActor({ id: 'bateria-esquerda-muralha', texture: 'torreta-de-plasma-alienigena', x: LEVEL_ONE_BOSS_X + 178, y: 492, width: 88, height: 84, tags: ['target', 'bossPart'], kind: 'bossBattery1', hp: 7, scoreValue: 1_500, cooldown: 1.5 });
                 leftBat.sx = -1;
-                const rightBat = spawnActor({ id: 'bateria-direita-muralha', texture: 'torreta-laser-dupla-alienigena', x: LEVEL_ONE_BOSS_X + 598, y: 458, width: 90, height: 84, tags: ['target', 'bossPart'], kind: 'bossBattery2', hp: 7, scoreValue: 1_500, cooldown: 2.1 });
+                const rightBat = spawnActor({ id: 'bateria-direita-muralha', texture: 'torreta-laser-dupla-alienigena', x: LEVEL_ONE_BOSS_X + 515, y: 458, width: 90, height: 84, tags: ['target', 'bossPart'], kind: 'bossBattery2', hp: 7, scoreValue: 1_500, cooldown: 2.1 });
                 rightBat.sx = -1;
                 spawnActor({ id: 'lancador-muralha', texture: 'suporte-de-misseis', x: LEVEL_ONE_BOSS_X + 388, y: 202, width: 108, height: 52, tags: ['target', 'bossPart'], kind: 'bossLauncher', hp: 5, scoreValue: 1_200, cooldown: 3.8 });
                 bossCore = spawnActor({ id: 'nucleo-muralha', texture: 'boss-core', x: LEVEL_ONE_BOSS_X + 392, y: 416, width: 118, height: 128, tags: ['target', 'bossPart'], kind: 'bossCore1', hp: 15, scoreValue: 4_000, active: false, cooldown: 2.4 });
