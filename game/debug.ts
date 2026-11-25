@@ -53,9 +53,9 @@ export function addDebugControls(): void {
     });
 
     game.cheats.add({
-        name: 'bunker', does: 'Abre a área de evacuação depois do chefe final',
+        name: 'bunker', does: 'Vai direto para o bunker de evacuação no final da fase',
         run: () => {
-            newDebugRun(3, false);
+            newDebugRun(1, false);
             run.debugBunkerStart = true;
             game.scenes.go('play');
             return 'Bunker de evacuação';

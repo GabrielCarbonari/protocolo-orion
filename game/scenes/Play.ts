@@ -2,7 +2,7 @@ import { game } from '../engine.js';
 import { spawnActor, targetActors, actorByTargetId, boxesOverlap, burstAt, hitFlash, collisionBounds, type Actor, type CollisionBox, type CollisionBounds } from '../actors.js';
 import { firePlayer, fireAtPlayer, fireAngle, FIRE_INTERVALS, WEAPON_NAMES, WEAPON_PICKUP_TEXTURES, type ProjectileSystem } from '../combat.js';
 import {
-    LANDSCAPE, LEVEL_ONE_BOSS_X, LEVEL_ONE_GROUND, LEVEL_ONE_LENGTH, LEVEL_THREE_BOSS_Y,
+    LANDSCAPE, LEVEL_ONE_BOSS_X, LEVEL_ONE_BUNKER_X, LEVEL_ONE_GROUND, LEVEL_ONE_LENGTH, LEVEL_THREE_BOSS_Y,
     LEVEL_THREE_GROUND, LEVEL_THREE_HEIGHT, LEVEL_THREE_FINAL_PLATFORM, STAGE_ONE_EVENTS, buildCorridorWorld,
     addPlatform, buildJungleWorld, buildWaterfallWorld, groundPlatforms, levelThreeEvents,
 } from '../levels.js';
@@ -73,6 +73,7 @@ export const Play = {
         let stageWon = false;
         let runEnded = false;
         let bossStarted = false;
+        let stageOneEvacZone = false;
         let extractionStarted = false;
         let extractionSequence = false;
         let extractionTime = 0;
@@ -129,9 +130,13 @@ export const Play = {
             game.rig.bounds({ x: 0, y: 0, w: W, h: LEVEL_THREE_HEIGHT });
         }
 
-        const startX = stage === 1 ? (run.debugBossStart ? LEVEL_ONE_BOSS_X - 80 : 320) : stage === 2 ? W / 2 : 520;
+        const startX = stage === 1
+            ? (run.debugBunkerStart || run.debugBossStart ? LEVEL_ONE_BUNKER_X - 420 : 320)
+            : stage === 2 ? W / 2 : 520;
         const startY = stage === 1 ? groundedCenter(LEVEL_ONE_GROUND) : stage === 2 ? groundedCenter(H - 120) : run.debugBossStart ? groundedCenter(LEVEL_THREE_FINAL_PLATFORM + 145) : groundedCenter(LEVEL_THREE_GROUND);
-        scrollLeft = stage === 1 ? (run.debugBossStart ? Math.max(0, LEVEL_ONE_BOSS_X - W * 0.56) : 0) : 0;
+        scrollLeft = stage === 1
+            ? (run.debugBunkerStart || run.debugBossStart ? Math.max(0, LEVEL_ONE_BUNKER_X - W * 0.72) : 0)
+            : 0;
         const player = spawnActor({ id: 'soldado-orion', texture: stage === 2 ? 'orion-back' : 'player-idle', x: startX, y: startY, width: 52, height: 62, tags: ['player', 'target'], kind: 'player', hp: 1, layer: 'world', collisionBox: PLAYER_BODY.standing });
         function playerBounds(crouched = player.data.phase === 1): CollisionBounds {
             return bodyAt(player, crouched ? PLAYER_BODY.crouched : PLAYER_BODY.standing);
@@ -227,24 +232,45 @@ export const Play = {
             statusLabel.text = `SALA ${room}  •  DESTRUA OS CANHÕES E A BARREIRA`;
         }
 
+        function enterStageOneEvacZone(): void {
+            if (stageOneEvacZone) return;
+            stageOneEvacZone = true;
+            projectiles.clear();
+            for (const h of game.roster.tagged('leftHunter') as Iterable<Actor>) h.destroy();
+            for (const shot of game.roster.tagged('enemyProjectile') as Iterable<Actor>) shot.destroy();
+            for (const enemy of game.roster.tagged('enemy') as Iterable<Actor>) enemy.destroy();
+            statusLabel.text = 'BUNKER DE EVACUAÇÃO  •  ENCOSTE NO BUNKER PARA TERMINAR';
+        }
+
+        function completeStageOneBunker(): void {
+            if (stageWon) return;
+            enterStageOneEvacZone();
+            stageWon = true;
+            run.cleared = 1;
+            run.extractionBonus = 5_000 + run.lives * 500;
+            award(run.extractionBonus);
+            updateRecord();
+            const door = game.roster.byId('comporta-bunker-fase1') as Actor | null;
+            if (door?.alive) door.visible = true;
+            playCrewSfx('bunker-door', 'barreira', { volume: 0.85 });
+            playCrewSfx('mission-clear', 'vitoria', { volume: 0.85 });
+            game.feel.flash('#d9fff5', 0.18);
+            game.feel.shake(6, 0.25);
+            statusLabel.text = 'EVACUAÇÃO CONFIRMADA  •  MISSÃO CUMPRIDA!';
+            game.after(1.35, () => void game.transition.go('missioncomplete', { kind: 'pixels', duration: 0.6, color: '#020a04', cells: 16 }));
+        }
+
         function spawnBoss(): void {
+            if (stage === 1) {
+                enterStageOneEvacZone();
+                run.debugBossStart = false;
+                return;
+            }
             if (bossStarted || extractionStarted) return;
             bossStarted = true;
             game.sound.play('chefe');
             game.feel.shake(5, 0.28);
-            if (stage === 1) {
-                for (const h of game.roster.tagged('leftHunter') as Iterable<Actor>) h.destroy();
-                bossGate = spawnActor({ id: 'portao-muralha', texture: 'defense-gate', x: LEVEL_ONE_BOSS_X + 392, y: 426, width: 190, height: 205, layer: 'world', kind: 'bossGate' });
-                spawnActor({ id: 'sacos-muralha', texture: 'barricada-de-sacos-de-areia', x: LEVEL_ONE_BOSS_X + 390, y: 578, width: 310, height: 112, layer: 'world', kind: 'bossDecoration' });
-                const leftBat = spawnActor({ id: 'bateria-esquerda-muralha', texture: 'torreta-de-plasma-alienigena', x: LEVEL_ONE_BOSS_X + 178, y: 492, width: 88, height: 84, tags: ['target', 'bossPart'], kind: 'bossBattery1', hp: 7, scoreValue: 1_500, cooldown: 1.5 });
-                leftBat.sx = -1;
-                const rightBat = spawnActor({ id: 'bateria-direita-muralha', texture: 'torreta-laser-dupla-alienigena', x: LEVEL_ONE_BOSS_X + 515, y: 458, width: 90, height: 84, tags: ['target', 'bossPart'], kind: 'bossBattery2', hp: 7, scoreValue: 1_500, cooldown: 2.1 });
-                rightBat.sx = -1;
-                spawnActor({ id: 'lancador-muralha', texture: 'suporte-de-misseis', x: LEVEL_ONE_BOSS_X + 388, y: 202, width: 108, height: 52, tags: ['target', 'bossPart'], kind: 'bossLauncher', hp: 5, scoreValue: 1_200, cooldown: 3.8 });
-                bossCore = spawnActor({ id: 'nucleo-muralha', texture: 'boss-core', x: LEVEL_ONE_BOSS_X + 392, y: 416, width: 118, height: 128, tags: ['target', 'bossPart'], kind: 'bossCore1', hp: 15, scoreValue: 4_000, active: false, cooldown: 2.4 });
-                updateBossBar(STAGE_BOSSES[0], bossCore.data.hp, bossCore);
-                statusLabel.text = 'MURALHA DE DEFESA  •  DESTRUA AS BATERIAS LATERAIS';
-            } else if (stage === 2) {
+            if (stage === 2) {
                 clearRoomActors();
                 corridorDoor?.destroy();
                 spawnActor({ id: 'computador-fundo', texture: 'computer-wall', x: W / 2, y: 305, width: 760, height: 440, layer: 'back', kind: 'bossBackdrop' });
@@ -485,6 +511,7 @@ export const Play = {
         }
 
         function finishStage(): void {
+            if (stage === 1) { completeStageOneBunker(); return; }
             if (stage === 3) { beginExtraction(); return; }
             if (stageWon) return;
             stageWon = true;
@@ -638,7 +665,7 @@ export const Play = {
         }
 
         function updateLeftHunters(dt: number): void {
-            if (stage !== 1 || bossStarted || stageWon) return;
+            if (stage !== 1 || bossStarted || stageOneEvacZone || stageWon) return;
             const slots = [
                 { offsetX: 118, baseY: 138, interval: 2.35, textures: ['nave-alienigena-aerea', 'drone-batedor'] as const, sizes: [[86, 62], [66, 50]] as const },
                 { offsetX: 244, baseY: 184, interval: 2.95, textures: ['bombardeiro-de-mergulho', 'disco-voador-blindado'] as const, sizes: [[62, 64], [86, 66]] as const },
@@ -690,7 +717,7 @@ export const Play = {
 
         function drawLeftEdgeWarning(): void {
             edgeFx.clear();
-            if (stage !== 1 || bossStarted || stageWon) return;
+            if (stage !== 1 || bossStarted || stageOneEvacZone || stageWon) return;
             const dist = player.x - scrollLeft;
             const pulse = 0.55 + Math.sin(run.campaignTime * 14) * 0.45;
             const alpha = dist < 170 ? (1 - Math.max(0, dist) / 170) * 0.52 * pulse : 0.1 * pulse;
@@ -755,7 +782,7 @@ export const Play = {
         }
 
         function spawnDueEvents(): void {
-            if (extractionStarted) return;
+            if (extractionStarted || stageOneEvacZone) return;
             if (stage === 1) {
                 for (const event of STAGE_ONE_EVENTS) {
                     if (spawnedEvents.has(event.id)) continue;
@@ -1369,21 +1396,29 @@ export const Play = {
 
             if (player.data.grounded && dropHeld && !jumpPressed) crouched = true;
             if (stage === 1) {
-                if (!bossStarted && !stageWon) {
+                const maxScrollLeft = LEVEL_ONE_BUNKER_X - W * 0.72;
+                if (!stageOneEvacZone && !stageWon) {
                     scrollLeft += TUNE.autoScrollSpeed * dt;
                     if (player.x > scrollLeft + W * 0.48) scrollLeft = Math.max(scrollLeft, player.x - W * 0.48);
-                    scrollLeft = Math.min(scrollLeft, LEVEL_ONE_BOSS_X - W * 0.52);
+                    scrollLeft = Math.min(scrollLeft, maxScrollLeft);
                 }
                 game.camera.x = scrollLeft + W / 2;
                 game.camera.y = H / 2;
-                player.x = Math.min(LEVEL_ONE_LENGTH - 90 - currentBody.width / 2, player.x);
-                if (!bossStarted && (player.x >= LEVEL_ONE_BOSS_X - W * 0.57 || scrollLeft >= LEVEL_ONE_BOSS_X - W * 0.54)) spawnBoss();
-                if (bossStarted) {
-                    player.x = Math.max(scrollLeft + currentBody.width / 2 + 12, Math.min(LEVEL_ONE_BOSS_X - 66, player.x));
+                player.x = Math.min(LEVEL_ONE_BUNKER_X + 60, player.x);
+                if (!stageOneEvacZone && (player.x >= LEVEL_ONE_BUNKER_X - 640 || scrollLeft >= maxScrollLeft - 40)) {
+                    enterStageOneEvacZone();
+                }
+                if (stageOneEvacZone) {
+                    player.x = Math.max(scrollLeft + currentBody.width / 2 + 12, Math.min(LEVEL_ONE_BUNKER_X + 60, player.x));
+                    const bunker = game.roster.byId('modulo-bunker-fase1') as Actor | null;
+                    const hero = playerBounds(crouched);
+                    if (bunker?.alive && boxesOverlap(hero.x, hero.y, hero.width, hero.height, bunker.x, bunker.y + 12, bunker.width * 0.82, bunker.height)) {
+                        completeStageOneBunker();
+                    }
                 } else if (player.x - currentBody.width / 2 <= scrollLeft + 8) {
                     captureByLeftEdge();
                 }
-                if (!runEnded && player.y > H + 100) hitPlayer('queda em rio profundo', true);
+                if (!runEnded && !stageWon && player.y > H + 100) hitPlayer('queda em rio profundo', true);
             } else if (stage === 3) {
                 player.x = Math.max(currentBody.width / 2 + TUNE.stageThreeEdgePadding, Math.min(W - currentBody.width / 2 - TUNE.stageThreeEdgePadding, player.x));
                 if (cameraTarget) {
@@ -1564,7 +1599,11 @@ export const Play = {
             }
         }
 
-        if (stage === 2) {
+        if (stage === 1 && (run.debugBunkerStart || run.debugBossStart)) {
+            run.debugBunkerStart = false;
+            run.debugBossStart = false;
+            enterStageOneEvacZone();
+        } else if (stage === 2) {
             if (run.debugBossStart) spawnBoss();
             else startCorridorRoom(Math.max(1, run.room || 1));
         } else if (stage === 3 && run.debugBunkerStart) {
@@ -1576,7 +1615,7 @@ export const Play = {
             spawnBoss();
         }
 
-        if (stage === 1) {
+        if (stage === 1 && !stageOneEvacZone) {
             cue('move', 'move');
             statusLabel.text = 'AVANCE SEMPRE À DIREITA  •  Q / SHIFT ATIRA PARA TRÁS';
         }

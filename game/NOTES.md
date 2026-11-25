@@ -13,7 +13,7 @@
 
 - Scenes: `title`, `orbital` (Part 1), `story` (Ejection cutscene), `play` (Part 2), `pause`, `gameover`, `missioncomplete`.
 - Part 1 (`orbital`): Space Invaders-style Orbital Defense with Caça Estelar Órion, 4 `energy-shield-dome` bunkers, 2 alien waves, Cruzador-Mãe flagship, orbital pickups, and atmospheric ejection transition into `story` -> `play`.
-- Part 2 Stage 1: steady right auto-scrolling alien jungle with 1–2 upper-left hovering alien ships firing diagonally down, instant left-edge capture, gaps, platforms, capsules, emplacements, infantry, saucers and the defense-wall boss.
+- Part 2 Stage 1: steady right auto-scrolling alien jungle with 1–2 upper-left hovering alien ships firing diagonally down, instant left-edge capture, gaps, platforms, capsules, alien turrets, infantry, and ending cleanly upon touching `modulo-bunker-de-evacuacao` (transitions directly to Victory).
 - Part 2 Stage 2: five-room rear-view corridor with the Núcleo Computador boss and no countdown.
 - Part 2 Stage 3: 90-platform waterfall climb, armored saucers, Órion core boss, evacuation bunker, sealed door, turret cover and extraction bonus.
 - Run state and visible objects: `npm run -s play -- "inspect"`; inspect the player with `inspect soldado-orion` or `inspect caca-orion`.

@@ -5,6 +5,7 @@ import { run, type WeaponPickup } from './state.js';
 export const LANDSCAPE = { width: 1280, height: 720 };
 export const LEVEL_ONE_LENGTH = 32_000;
 export const LEVEL_ONE_BOSS_X = 30_100;
+export const LEVEL_ONE_BUNKER_X = 30_420;
 export const LEVEL_ONE_GROUND = 620;
 export const LEVEL_THREE_HEIGHT = 14_500;
 export const LEVEL_THREE_PLATFORM_COUNT = 90;
@@ -131,7 +132,10 @@ export function buildJungleWorld(): void {
     for (const x of [8_900, 16_400, 23_900]) {
         spawnActor({ id: `raiz-pontiaguda-teto-${x}`, texture: 'root-spikes', x, y: 550, width: 104, height: 52, layer: 'front', tags: ['hazard'], kind: 'spikedRoot' }).rot = Math.PI;
     }
-    spawnActor({ id: 'muralha-paisagem', texture: 'defense-wall', x: LEVEL_ONE_BOSS_X + 400, y: 365, width: 760, height: 560, layer: 'back', kind: 'bossBackdrop' });
+    spawnActor({ id: 'antena-bunker-fase1', texture: 'torre-de-antena-do-bunker', x: LEVEL_ONE_BUNKER_X + 230, y: LEVEL_ONE_GROUND - 155, width: 88, height: 310, layer: 'back', kind: 'evacuationAntenna' });
+    spawnActor({ id: 'modulo-bunker-fase1', texture: 'modulo-bunker-de-evacuacao', x: LEVEL_ONE_BUNKER_X, y: LEVEL_ONE_GROUND - 146, width: 420, height: 300, layer: 'world', kind: 'evacuationBunker' });
+    const door = spawnActor({ id: 'comporta-bunker-fase1', texture: 'comporta-blindada-de-evacuacao', x: LEVEL_ONE_BUNKER_X, y: LEVEL_ONE_GROUND - 82, width: 118, height: 126, layer: 'world', kind: 'evacuationDoor' });
+    door.visible = false;
 }
 
 export function buildWaterfallWorld(): void {
