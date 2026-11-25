@@ -92,24 +92,25 @@ export function buildJungleWorld(): void {
             width: 128, height: 72, layer: 'world', kind: 'groundFill',
         });
     }
+    const bridgedGaps = new Set([3860, 13_150, 22_950, 26_700]);
     for (const [start, end] of WATER_GAPS) {
         const tileW = 72;
         for (let wx = start - 36; wx < end + 36; wx += tileW) {
             spawnActor({ id: `mar-sup-${start}-${wx}`, texture: 'mar-superficie', x: wx + tileW / 2, y: LEVEL_ONE_GROUND + 34, width: tileW, height: 70, layer: 'back', kind: 'water' });
             spawnActor({ id: `mar-prof-${start}-${wx}`, texture: 'mar-profundo', x: wx + tileW / 2, y: LEVEL_ONE_GROUND + 96, width: tileW, height: 68, layer: 'back', kind: 'water' });
         }
-        if (start === WATER_GAPS[0]?.[0] || start === WATER_GAPS[3]?.[0] || start === WATER_GAPS[6]?.[0]) {
-            addPlatform(`tronco-${start}`, 'log', (start + end) / 2, LEVEL_ONE_GROUND - 90, end - start + 20, 28, 'log', true);
+        if (bridgedGaps.has(start)) {
+            let leftBank = start;
+            let rightBank = end;
+            for (let gx = 100; gx < LEVEL_ONE_LENGTH; gx += 128) {
+                if (insideGap(gx)) continue;
+                if (gx + 128 <= start + 64) leftBank = gx + 128;
+                else if (gx >= end) { rightBank = gx; break; }
+            }
+            const bridgeCenter = (leftBank + rightBank) / 2;
+            const bridgeWidth = Math.max(240, rightBank - leftBank + 36);
+            addPlatform(`ponte-${start}`, 'metal-stone-bridge', bridgeCenter, LEVEL_ONE_GROUND - 2, bridgeWidth, 58, 'bridge', true);
         }
-    }
-    for (const x of [3980, 13_275, 23_080, 26_800]) {
-        addPlatform(`ponte-${x}`, 'metal-stone-bridge', x, LEVEL_ONE_GROUND - 14, 244, 48, 'bridge', true);
-    }
-    for (const [x, top, width] of [
-        [5900, 487, 210], [6100, 445, 180], [14_950, 482, 230], [15_240, 436, 180],
-        [20_700, 494, 190], [21_010, 450, 180], [27_150, 480, 210],
-    ]) {
-        addPlatform(`grade-${x}`, 'iron-grid', x, top, width, 24, 'grid', true);
     }
     for (const x of [3050, 3800, 8350, 14_450, 22_050]) {
         addPlatform(`rocha-${x}`, 'jungle-ground-tiles-platform', x, 520, 196, 86, 'ledge', true);
@@ -118,40 +119,17 @@ export function buildJungleWorld(): void {
     pod.rot = 0.22;
     spawnActor({ id: 'destrocos-caca-queda', texture: 'destrocos-do-caca-abatido', x: 610, y: LEVEL_ONE_GROUND - 78, width: 340, height: 164, layer: 'world', kind: 'wreckage' });
     const wreckTop = addPlatform('destrocos-caca-piso', 'white', 610, LEVEL_ONE_GROUND - 160, 220, 18, 'wreckPlatform', true); wreckTop.visible = false;
-    const crashDebris: Array<[string, number, number, number]> = [
-        ['burning-cockpit-fragment', 455, 56, 48],
-        ['burning-wingtip-fragment', 775, 48, 52],
-        ['burning-thruster-nozzle', 1085, 50, 42],
-        ['burning-stabilizer-fin', 1660, 46, 52],
-        ['burning-cockpit-frame', 2040, 52, 44],
-        ['burning-armor-plate', 3450, 50, 46],
-        ['burning-engine-cowling', 4620, 54, 46],
-        ['burning-metal-strut', 6240, 52, 42],
-        ['burning-hull-plating', 7820, 48, 46],
-        ['burning-metal-frame', 9220, 46, 46],
-        ['burning-intake-vent', 10_850, 48, 44],
-        ['burning-fuel-casing', 12_650, 48, 46],
-        ['burning-fuselage-fragment', 15_600, 52, 46],
-        ['burning-cannon-barrel', 18_450, 50, 46],
-        ['burning-bulkhead-plate', 21_650, 48, 46],
-        ['burning-wreckage-shard', 25_400, 46, 46],
-    ];
-    for (const [texture, dx, dw, dh] of crashDebris) {
-        spawnActor({ id: `destroco-${texture}`, texture, x: dx, y: LEVEL_ONE_GROUND - dh / 2 + 4, width: dw, height: dh, layer: 'world', kind: 'wreckage' });
-    }
     spawnActor({ id: 'propulsor-caca', texture: 'propulsor-de-reforco', x: 950, y: LEVEL_ONE_GROUND - 42, width: 210, height: 76, kind: 'wreckage' });
     const boosterTop = addPlatform('propulsor-plataforma', 'white', 950, LEVEL_ONE_GROUND - 82, 150, 16, 'wreckPlatform', true); boosterTop.visible = false;
-    spawnActor({ id: 'suporte-misseis-caca', texture: 'suporte-de-misseis', x: 1260, y: LEVEL_ONE_GROUND - 42, width: 170, height: 82, kind: 'wreckage' });
-    const missileTop = addPlatform('suporte-misseis-plataforma', 'white', 1260, LEVEL_ONE_GROUND - 84, 130, 16, 'wreckPlatform', true); missileTop.visible = false;
-    addPlatform('sacos-de-areia-inicial', 'barricada-de-sacos-de-areia', 1500, LEVEL_ONE_GROUND - 45, 176, 56, 'sandbag', true);
-    for (const x of [2_820, 7_560, 11_180, 17_780, 24_980]) {
-        spawnActor({ id: `cratera-incandescente-${x}`, texture: 'incandescent-crater', x, y: LEVEL_ONE_GROUND - 6, width: 94, height: 42, tags: ['hazard'], kind: 'crater', timer: x % 4 });
-    }
-    for (const x of [4_950, 9_980, 18_780, 25_850]) {
-        spawnActor({ id: `raiz-pontiaguda-piso-${x}`, texture: 'root-spikes', x, y: LEVEL_ONE_GROUND - 18, width: 112, height: 38, tags: ['hazard'], kind: 'spikedRoot' });
-    }
-    for (const x of [8_900, 16_400, 23_900]) {
-        spawnActor({ id: `raiz-pontiaguda-teto-${x}`, texture: 'root-spikes', x, y: 550, width: 104, height: 52, layer: 'front', tags: ['hazard'], kind: 'spikedRoot' }).rot = Math.PI;
+    const burningHazards: Array<[string, number, number, number]> = [
+        ['burning-cockpit-fragment', 2_820, 56, 48],
+        ['burning-wingtip-fragment', 7_560, 50, 52],
+        ['burning-thruster-nozzle', 11_180, 54, 46],
+        ['burning-engine-cowling', 17_780, 56, 48],
+        ['burning-fuselage-fragment', 24_980, 56, 48],
+    ];
+    for (const [texture, x, w, h] of burningHazards) {
+        spawnActor({ id: `destroco-fogo-${x}`, texture, x, y: LEVEL_ONE_GROUND - h / 2 + 4, width: w, height: h, tags: ['hazard'], kind: 'crater', timer: (x % 3) + 0.5 });
     }
     spawnActor({ id: 'antena-bunker-fase1', texture: 'torre-de-antena-do-bunker', x: LEVEL_ONE_BUNKER_X + 230, y: LEVEL_ONE_GROUND - 155, width: 88, height: 310, layer: 'back', kind: 'evacuationAntenna' });
     spawnActor({ id: 'modulo-bunker-fase1', texture: 'modulo-bunker-de-evacuacao', x: LEVEL_ONE_BUNKER_X, y: LEVEL_ONE_GROUND - 146, width: 420, height: 300, layer: 'world', kind: 'evacuationBunker' });
@@ -172,18 +150,20 @@ export function buildWaterfallWorld(): void {
         if (y % 920 === 0) spawnActor({ id: `rocha-fundo-${y}`, texture: 'cliff', x: y % 1840 === 0 ? 10 : 1270, y: y + 180, width: 270, height: 510, layer: 'back', kind: 'cliff' });
     }
     const xPositions = [520, 780, 1000, 780, 520, 280, 520, 780, 1000, 780, 520, 280];
+    const climbDebris = ['burning-armor-plate', 'burning-metal-strut', 'burning-hull-plating', 'burning-fuel-casing'] as const;
     for (let index = 0; index < LEVEL_THREE_PLATFORM_COUNT; index++) {
         const top = LEVEL_THREE_GROUND - index * 145;
         const x = xPositions[index % xPositions.length] ?? 520;
-        const isGrid = index % 11 === 0;
-        const isBridge = !isGrid && index % 7 === 0;
+        const isBridge = index % 7 === 0 && index > 0;
         const rockKind = index % 3 === 0 ? 'long-alien-rock-platform' : index % 3 === 1 ? 'alien-stone-cliff-step' : 'small-rocky-alien-ledge';
-        const texture = isGrid ? 'iron-grid' : isBridge ? 'bridge' : rockKind;
-        const width = isGrid || isBridge ? 220 : rockKind === 'long-alien-rock-platform' ? 248 : rockKind === 'alien-stone-cliff-step' ? 216 : 196;
-        const height = isGrid || isBridge ? 24 : rockKind === 'long-alien-rock-platform' ? 56 : rockKind === 'alien-stone-cliff-step' ? 110 : 92;
-        addPlatform(`cume-plataforma-${index}`, texture, x, top, width, height, isBridge ? 'bridge' : isGrid ? 'grid' : 'cliffPlatform', true);
-        if (index % 13 === 7) spawnActor({ id: `brasa-cume-${index}`, texture: 'incandescent-crater', x: x + 54, y: top - 1, width: 72, height: 34, tags: ['hazard'], kind: 'crater' });
-        if (index % 17 === 9) spawnActor({ id: `raiz-cume-${index}`, texture: 'root-spikes', x: x - 52, y: top - 14, width: 76, height: 28, tags: ['hazard'], kind: 'spikedRoot' });
+        const texture = isBridge ? 'metal-stone-bridge' : rockKind;
+        const width = isBridge ? 236 : rockKind === 'long-alien-rock-platform' ? 248 : rockKind === 'alien-stone-cliff-step' ? 216 : 196;
+        const height = isBridge ? 46 : rockKind === 'long-alien-rock-platform' ? 56 : rockKind === 'alien-stone-cliff-step' ? 110 : 92;
+        addPlatform(`cume-plataforma-${index}`, texture, x, top, width, height, isBridge ? 'bridge' : 'cliffPlatform', true);
+        if (index % 13 === 7) {
+            const deb = climbDebris[index % climbDebris.length] ?? climbDebris[0];
+            spawnActor({ id: `brasa-cume-${index}`, texture: deb, x: x + 54, y: top - 18, width: 48, height: 42, tags: ['hazard'], kind: 'crater', timer: 1.5 });
+        }
         if (index % 9 === 0 && index > 0) spawnActor({ id: `ninho-${index}`, texture: 'nest', x: x + (index % 2 ? 60 : -60), y: top - 30, width: 60, height: 46, tags: ['enemy', 'target'], kind: 'nest', hp: 3, scoreValue: 220, weapon: 'B' });
     }
 }

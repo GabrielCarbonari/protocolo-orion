@@ -433,7 +433,7 @@ export const Play = {
                 { x: 520, top: 720, tex: 'small-rocky-alien-ledge', w: 210, h: 96 },
             ];
             ascent.forEach((ledge, index) => addPlatform(`bunker-acesso-${index}`, ledge.tex, ledge.x, ledge.top, ledge.w, ledge.h, 'bunkerLedge', true));
-            bunkerStep = addPlatform('escadas-bunker-evacuacao', 'iron-grid', 640, 540, 440, 34, 'bunkerSteps', true);
+            bunkerStep = addPlatform('escadas-bunker-evacuacao', 'long-alien-rock-platform', 640, 540, 440, 54, 'bunkerSteps', true);
             spawnActor({ id: 'modulo-bunker-evacuacao', texture: 'modulo-bunker-de-evacuacao', x: 640, y: 370, width: 500, height: 358, layer: 'back', kind: 'evacuationBunker' });
             bunkerDoor = spawnActor({ id: 'comporta-bunker-evacuacao', texture: 'comporta-blindada-de-evacuacao', x: 640, y: 390, width: 138, height: 148, layer: 'back', kind: 'evacuationDoor' });
             bunkerDoor.visible = false;
@@ -1271,11 +1271,10 @@ export const Play = {
             for (const hazard of game.roster.tagged('hazard') as Iterable<Actor>) {
                 if (!hazard.alive) continue;
                 if (hazard.data.kind === 'crater') {
-                    hazard.setFrame(Math.floor(run.campaignTime * 3) % 2);
                     hazard.data.timer -= dt;
                     if (hazard.data.timer <= 0) {
-                        hazard.data.timer = 3.4;
-                        game.particles.burst({ x: hazard.x, y: hazard.y - 15, count: 5, layer: 'front', frame: 'particle:smoke', speed: [24, 68], lifespan: [0.28, 0.6], color: ['#ffce65', '#ff7650', '#bd57d5'] });
+                        hazard.data.timer = 1.6;
+                        game.particles.burst({ x: hazard.x, y: hazard.y - 14, count: 4, layer: 'front', frame: 'particle:spark', blend: 'add', speed: [22, 64], lifespan: [0.22, 0.52], color: ['#fff6bf', '#ff9d2e', '#ff5a5a'] });
                     }
                 } else if (hazard.data.kind === 'acidSplash') {
                     hazard.data.timer -= dt;

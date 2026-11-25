@@ -22,11 +22,13 @@ export function addDebugControls(): void {
     game.inspect.state(() => run);
 
     game.cheats.add({
-        name: 'orbital', does: 'Começa na Parte 1: Defesa Orbital',
-        run: () => {
+        name: 'orbital', does: 'Começa na Parte 1: Defesa Orbital (onda 1 ou 2)', args: 'wave',
+        run: value => {
+            const w = value === '2' ? 2 : 1;
             resetRun(3);
+            run.orbitalWave = w;
             game.scenes.go('orbital');
-            return 'Parte 1: Defesa Orbital';
+            return `Parte 1: Defesa Orbital (Onda ${w})`;
         },
     });
 

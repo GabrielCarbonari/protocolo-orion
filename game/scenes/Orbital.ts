@@ -58,7 +58,7 @@ export const Orbital = {
         });
 
         let orbitalShields = ORBITAL.maxShields;
-        let wave = 1;
+        let wave = run.orbitalWave === 2 ? 2 : 1;
         let boost: OrbitalBoost = 'normal';
         let boostTimer = 0;
         let fireCooldown = 0;
@@ -194,51 +194,67 @@ export const Orbital = {
             waveBannerTimer = 2.0;
 
             if (waveNum === 1) {
-                const rows: Array<{ texture: string; w: number; h: number; hp: number; score: number; rot: number }> = [
-                    { texture: 'brain-alien-ufo', w: 64, h: 42, hp: 2, score: 260, rot: 0 },
-                    { texture: 'alien-pilot-saucer', w: 66, h: 42, hp: 2, score: 220, rot: 0 },
-                    { texture: 'heavy-scout-saucer', w: 68, h: 30, hp: 1, score: 160, rot: 0 },
-                    { texture: 'winged-interceptor-saucer', w: 72, h: 26, hp: 1, score: 120, rot: 0 },
+                const rowPairs: Array<{ left: { texture: string; w: number; h: number }; right: { texture: string; w: number; h: number }; hp: number; score: number }> = [
+                    {
+                        left: { texture: 'blue-war-saucer', w: 68, h: 28 },
+                        right: { texture: 'finned-attack-saucer', w: 64, h: 36 },
+                        hp: 2, score: 250,
+                    },
+                    {
+                        left: { texture: 'heavy-scout-saucer', w: 68, h: 30 },
+                        right: { texture: 'white-disc-saucer', w: 66, h: 32 },
+                        hp: 1, score: 180,
+                    },
+                    {
+                        left: { texture: 'sleek-stealth-saucer', w: 72, h: 26 },
+                        right: { texture: 'winged-interceptor-saucer', w: 72, h: 26 },
+                        hp: 1, score: 140,
+                    },
+                    {
+                        left: { texture: 'disco-voador-classico', w: 64, h: 36 },
+                        right: { texture: 'disco-voador-classico', w: 64, h: 36 },
+                        hp: 1, score: 100,
+                    },
                 ];
                 const cols = 8;
                 const spacingX = 104;
                 const startX = W / 2 - ((cols - 1) * spacingX) / 2;
                 const startY = 128;
-                totalWaveAliens = rows.length * cols;
-                rows.forEach((spec, r) => {
+                totalWaveAliens = rowPairs.length * cols;
+                rowPairs.forEach((row, r) => {
                     for (let c = 0; c < cols; c++) {
-                        const a = spawnActor({
+                        const spec = c % 2 === 0 ? row.left : row.right;
+                        spawnActor({
                             id: `orb-alien-w1-${r}-${c}`,
                             texture: spec.texture,
                             x: startX + c * spacingX,
-                            y: startY + r * 66,
+                            y: startY + r * 64,
                             width: spec.w,
                             height: spec.h,
                             layer: 'world',
                             tags: ['orbitalAlien'],
                             kind: 'orbitalAlien',
-                            hp: spec.hp,
-                            scoreValue: spec.score,
+                            hp: row.hp,
+                            scoreValue: row.score,
                         });
-                        a.rot = spec.rot;
                     }
                 });
                 subHeaderLabel.text = 'ONDA 1 / 2  •  VANGUARDA ORBITAL';
                 statusLabel.text = 'DEFENDA A ÓRBITA  •  Z / ESPAÇO DISPARAM';
             } else {
-                // Wave 2: Assault wing + Cruzador-Mãe flagship
-                const rows: Array<{ texture: string; w: number; h: number; hp: number; score: number; rot: number }> = [
-                    { texture: 'finned-attack-saucer', w: 66, h: 38, hp: 2, score: 300, rot: 0 },
-                    { texture: 'blue-war-saucer', w: 68, h: 28, hp: 2, score: 240, rot: 0 },
+                // Wave 2: Alien pilot & brain UFO escorts + Bombardeiro Alienígena Rasante boss
+                const rows: Array<{ texture: string; w: number; h: number; hp: number; score: number }> = [
+                    { texture: 'brain-alien-ufo', w: 68, h: 45, hp: 2, score: 300 },
+                    { texture: 'alien-pilot-saucer', w: 68, h: 44, hp: 2, score: 240 },
                 ];
                 const cols = 6;
                 const spacingX = 124;
                 const startX = W / 2 - ((cols - 1) * spacingX) / 2;
-                const startY = 242;
+                const startY = 248;
                 totalWaveAliens = rows.length * cols;
                 rows.forEach((spec, r) => {
                     for (let c = 0; c < cols; c++) {
-                        const a = spawnActor({
+                        spawnActor({
                             id: `orb-alien-w2-${r}-${c}`,
                             texture: spec.texture,
                             x: startX + c * spacingX,
@@ -251,17 +267,16 @@ export const Orbital = {
                             hp: spec.hp,
                             scoreValue: spec.score,
                         });
-                        a.rot = spec.rot;
                     }
                 });
 
                 flagship = spawnActor({
-                    id: 'cruzador-mae-orbital',
-                    texture: 'cruzador-mae-alienigena',
+                    id: 'bombardeiro-orbital-boss',
+                    texture: 'bombardeiro-alienigena-rasante',
                     x: W / 2,
-                    y: 146,
-                    width: 112,
-                    height: 196,
+                    y: 152,
+                    width: 176,
+                    height: 150,
                     layer: 'world',
                     tags: ['orbitalFlagship'],
                     kind: 'orbitalFlagship',
@@ -269,7 +284,6 @@ export const Orbital = {
                     scoreValue: 2_500,
                     vx: 150,
                 });
-                flagship.rot = Math.PI; // Nose facing downward toward the colony
 
                 if (!bossBar) {
                     bossBar = game.bars.create({
@@ -289,8 +303,8 @@ export const Orbital = {
                 }
                 game.sound.play('chefe');
                 game.feel.shake(6, 0.3);
-                subHeaderLabel.text = 'ONDA 2 / 2  •  CRUZADOR-MÃE ALIENÍGENA';
-                statusLabel.text = 'DESTRUA O CRUZADOR-MÃE E SUA ESCOLTA!';
+                subHeaderLabel.text = 'ONDA 2 / 2  •  BOMBARDEIRO ALIENÍGENA';
+                statusLabel.text = 'DESTRUA O BOMBARDEIRO ALIENÍGENA E SUA ESCOLTA!';
             }
         }
 
@@ -450,7 +464,7 @@ export const Orbital = {
             }
         }
 
-        spawnWave(1);
+        spawnWave(wave);
         syncHud();
 
         game.step('orbital', dt => {
@@ -583,33 +597,25 @@ export const Orbital = {
                 }
             }
 
-            // Mystery saucer bonus during Wave 1
-            if (wave === 1) {
-                mysteryCooldown -= dt;
-                if (mysteryCooldown <= 0) {
-                    mysteryCooldown = 11.5;
-                    const fromLeft = game.rng.int(0, 1) === 0;
-                    const mysteryPool = [
-                        { texture: 'white-disc-saucer', w: 84, h: 40 },
-                        { texture: 'sleek-stealth-saucer', w: 88, h: 31 },
-                        { texture: 'notched-attack-saucer', w: 84, h: 40 },
-                    ];
-                    const pick = mysteryPool[effectIndex % mysteryPool.length] ?? mysteryPool[0]!;
-                    spawnActor({
-                        id: `orb-misterio-${++effectIndex}`,
-                        texture: pick.texture,
-                        x: fromLeft ? -48 : W + 48,
-                        y: 102,
-                        width: pick.w,
-                        height: pick.h,
-                        layer: 'world',
-                        tags: ['orbitalMystery'],
-                        kind: 'orbitalMystery',
-                        hp: 2,
-                        scoreValue: 600,
-                        vx: fromLeft ? 210 : -210,
-                    });
-                }
+            // Mystery saucer bonus ("notched-attack-saucer") that drops a power-up
+            mysteryCooldown -= dt;
+            if (mysteryCooldown <= 0) {
+                mysteryCooldown = 11.5;
+                const fromLeft = game.rng.int(0, 1) === 0;
+                spawnActor({
+                    id: `orb-misterio-${++effectIndex}`,
+                    texture: 'notched-attack-saucer',
+                    x: fromLeft ? -48 : W + 48,
+                    y: 102,
+                    width: 86,
+                    height: 42,
+                    layer: 'world',
+                    tags: ['orbitalMystery'],
+                    kind: 'orbitalMystery',
+                    hp: 2,
+                    scoreValue: 600,
+                    vx: fromLeft ? 210 : -210,
+                });
             }
             for (const m of game.roster.tagged('orbitalMystery') as Iterable<Actor>) {
                 if (!m.alive) continue;
