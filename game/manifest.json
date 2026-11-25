@@ -1,0 +1,114 @@
+{
+  "name": "protocolo-rion",
+  "screen": {
+    "width": 1280,
+    "height": 720,
+    "fit": "height",
+    "pixelArt": true,
+    "background": "#07111d"
+  },
+  "seed": 20435,
+  "backgroundPolicy": "pause",
+  "packs": [
+    {
+      "id": "core-2d"
+    },
+    {
+      "id": "ui-skins"
+    },
+    {
+      "id": "ui-skin-candy",
+      "options": {
+        "color": "blue",
+        "radius": 12
+      }
+    },
+    {
+      "id": "save",
+      "options": {
+        "namespace": "protocolo-orion"
+      }
+    },
+    {
+      "id": "typography"
+    },
+    {
+      "id": "maths"
+    },
+    {
+      "id": "controls-touch",
+      "options": {
+        "stick": {
+          "codes": {
+            "left": "Touch:left",
+            "right": "Touch:right",
+            "up": "Touch:up",
+            "down": "Touch:down"
+          },
+          "anchor": "bottom-left",
+          "x": 118,
+          "y": 112,
+          "r": 82,
+          "deadzone": 0.28,
+          "tint": "#8ce8ff"
+        },
+        "buttons": [
+          {
+            "code": "Touch:jump",
+            "label": "A",
+            "anchor": "bottom-right",
+            "x": 206,
+            "y": 112,
+            "r": 52,
+            "tint": "#66ff99"
+          },
+          {
+            "code": "Touch:fire",
+            "label": "B",
+            "anchor": "bottom-right",
+            "x": 88,
+            "y": 72,
+            "r": 58,
+            "tint": "#ff9d2e"
+          },
+          {
+            "code": "Touch:fireBack",
+            "label": "◀",
+            "anchor": "bottom-right",
+            "x": 88,
+            "y": 188,
+            "r": 44,
+            "tint": "#ff5a5a"
+          }
+        ],
+        "alpha": 0.56,
+        "touchOnly": true,
+        "layer": "hud"
+      }
+    },
+    {
+      "id": "actors"
+    },
+    {
+      "id": "projectile-patterns"
+    },
+    {
+      "id": "bars",
+      "options": {
+        "defaultStyle": "retro"
+      }
+    },
+    {
+      "id": "effects-2d"
+    },
+    {
+      "id": "post"
+    },
+    {
+      "id": "post-looks"
+    },
+    {
+      "id": "transition"
+    }
+  ]
+}
