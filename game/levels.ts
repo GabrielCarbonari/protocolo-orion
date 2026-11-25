@@ -103,7 +103,7 @@ export function buildJungleWorld(): void {
         }
     }
     for (const x of [3980, 13_275, 23_080, 26_800]) {
-        addPlatform(`ponte-${x}`, 'bridge', x, LEVEL_ONE_GROUND - 13, 220, 28, 'bridge', true);
+        addPlatform(`ponte-${x}`, 'metal-stone-bridge', x, LEVEL_ONE_GROUND - 14, 244, 48, 'bridge', true);
     }
     for (const [x, top, width] of [
         [5900, 487, 210], [6100, 445, 180], [14_950, 482, 230], [15_240, 436, 180],
@@ -118,6 +118,27 @@ export function buildJungleWorld(): void {
     pod.rot = 0.22;
     spawnActor({ id: 'destrocos-caca-queda', texture: 'destrocos-do-caca-abatido', x: 610, y: LEVEL_ONE_GROUND - 78, width: 340, height: 164, layer: 'world', kind: 'wreckage' });
     const wreckTop = addPlatform('destrocos-caca-piso', 'white', 610, LEVEL_ONE_GROUND - 160, 220, 18, 'wreckPlatform', true); wreckTop.visible = false;
+    const crashDebris: Array<[string, number, number, number]> = [
+        ['burning-cockpit-fragment', 455, 56, 48],
+        ['burning-wingtip-fragment', 775, 48, 52],
+        ['burning-thruster-nozzle', 1085, 50, 42],
+        ['burning-stabilizer-fin', 1660, 46, 52],
+        ['burning-cockpit-frame', 2040, 52, 44],
+        ['burning-armor-plate', 3450, 50, 46],
+        ['burning-engine-cowling', 4620, 54, 46],
+        ['burning-metal-strut', 6240, 52, 42],
+        ['burning-hull-plating', 7820, 48, 46],
+        ['burning-metal-frame', 9220, 46, 46],
+        ['burning-intake-vent', 10_850, 48, 44],
+        ['burning-fuel-casing', 12_650, 48, 46],
+        ['burning-fuselage-fragment', 15_600, 52, 46],
+        ['burning-cannon-barrel', 18_450, 50, 46],
+        ['burning-bulkhead-plate', 21_650, 48, 46],
+        ['burning-wreckage-shard', 25_400, 46, 46],
+    ];
+    for (const [texture, dx, dw, dh] of crashDebris) {
+        spawnActor({ id: `destroco-${texture}`, texture, x: dx, y: LEVEL_ONE_GROUND - dh / 2 + 4, width: dw, height: dh, layer: 'world', kind: 'wreckage' });
+    }
     spawnActor({ id: 'propulsor-caca', texture: 'propulsor-de-reforco', x: 950, y: LEVEL_ONE_GROUND - 42, width: 210, height: 76, kind: 'wreckage' });
     const boosterTop = addPlatform('propulsor-plataforma', 'white', 950, LEVEL_ONE_GROUND - 82, 150, 16, 'wreckPlatform', true); boosterTop.visible = false;
     spawnActor({ id: 'suporte-misseis-caca', texture: 'suporte-de-misseis', x: 1260, y: LEVEL_ONE_GROUND - 42, width: 170, height: 82, kind: 'wreckage' });
@@ -180,6 +201,7 @@ export function addPlatform(id: string, texture: string, x: number, top: number,
             : texture === 'long-alien-rock-platform' ? 6
             : texture === 'alien-stone-cliff-step' ? 10
             : texture === 'small-rocky-alien-ledge' ? 10
+            : texture === 'metal-stone-bridge' ? 5
             : texture === 'iron-grid' ? 3
             : texture === 'bridge' ? 5
             : texture === 'log' ? 4

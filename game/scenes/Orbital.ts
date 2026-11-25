@@ -25,6 +25,13 @@ const ORBITAL = {
     ejectionDuration: 2.1,
 };
 
+const BURNING_DEBRIS = [
+    'burning-cockpit-fragment', 'burning-wingtip-fragment', 'burning-thruster-nozzle', 'burning-stabilizer-fin',
+    'burning-cockpit-frame', 'burning-armor-plate', 'burning-engine-cowling', 'burning-metal-strut',
+    'burning-hull-plating', 'burning-metal-frame', 'burning-intake-vent', 'burning-fuel-casing',
+    'burning-fuselage-fragment', 'burning-cannon-barrel', 'burning-bulkhead-plate', 'burning-wreckage-shard',
+] as const;
+
 type OrbitalBoost = 'normal' | 'spread' | 'laser';
 
 export const Orbital = {
@@ -157,6 +164,29 @@ export const Orbital = {
             });
         }
 
+        function spawnDebrisBurst(x: number, y: number, count: number): void {
+            for (let i = 0; i < count; i++) {
+                const texture = BURNING_DEBRIS[game.rng.int(0, BURNING_DEBRIS.length - 1)] ?? BURNING_DEBRIS[0];
+                const angle = game.rng.int(-314, 314) / 100;
+                const speed = game.rng.int(95, 240);
+                spawnActor({
+                    id: `orb-debris-${++effectIndex}`,
+                    texture,
+                    x,
+                    y,
+                    width: 38,
+                    height: 36,
+                    layer: 'front',
+                    tags: ['orbitalDebris'],
+                    kind: 'orbitalDebris',
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 60,
+                    timer: 1.15,
+                    phase: 1.15,
+                });
+            }
+        }
+
         function spawnWave(waveNum: number): void {
             wave = waveNum;
             run.orbitalWave = wave;
@@ -165,10 +195,10 @@ export const Orbital = {
 
             if (waveNum === 1) {
                 const rows: Array<{ texture: string; w: number; h: number; hp: number; score: number; rot: number }> = [
-                    { texture: 'bombardeiro-de-mergulho', w: 56, h: 58, hp: 2, score: 250, rot: -Math.PI / 2 },
-                    { texture: 'nave-alienigena-aerea', w: 66, h: 48, hp: 2, score: 200, rot: -Math.PI / 2 },
-                    { texture: 'drone-batedor', w: 60, h: 46, hp: 1, score: 150, rot: -Math.PI / 2 },
-                    { texture: 'disco-voador-classico', w: 64, h: 36, hp: 1, score: 100, rot: 0 },
+                    { texture: 'brain-alien-ufo', w: 64, h: 42, hp: 2, score: 260, rot: 0 },
+                    { texture: 'alien-pilot-saucer', w: 66, h: 42, hp: 2, score: 220, rot: 0 },
+                    { texture: 'heavy-scout-saucer', w: 68, h: 30, hp: 1, score: 160, rot: 0 },
+                    { texture: 'winged-interceptor-saucer', w: 72, h: 26, hp: 1, score: 120, rot: 0 },
                 ];
                 const cols = 8;
                 const spacingX = 104;
@@ -198,8 +228,8 @@ export const Orbital = {
             } else {
                 // Wave 2: Assault wing + Cruzador-Mãe flagship
                 const rows: Array<{ texture: string; w: number; h: number; hp: number; score: number; rot: number }> = [
-                    { texture: 'bombardeiro-de-mergulho', w: 60, h: 62, hp: 2, score: 300, rot: -Math.PI / 2 },
-                    { texture: 'drone-batedor', w: 62, h: 46, hp: 2, score: 220, rot: -Math.PI / 2 },
+                    { texture: 'finned-attack-saucer', w: 66, h: 38, hp: 2, score: 300, rot: 0 },
+                    { texture: 'blue-war-saucer', w: 68, h: 28, hp: 2, score: 240, rot: 0 },
                 ];
                 const cols = 6;
                 const spacingX = 124;
@@ -364,6 +394,7 @@ export const Orbital = {
             updateRecord();
 
             showExplosion(ship.x, ship.y, true);
+            spawnDebrisBurst(ship.x, ship.y, 7);
             burstAt(ship.x, ship.y, 28, ['#fff6bf', '#ff9d2e', '#ff5a5a']);
             game.feel.flash(wonOrbital ? '#c8f7ff' : '#ff9d2e', 0.22);
             game.feel.shake(10, 0.4);
@@ -443,7 +474,7 @@ export const Orbital = {
                 damageOrbitalShip('teste de perda orbital');
             }
 
-            // Update explosion visual effects
+            // Update explosion visual effects & burning debris shards
             for (const fx of game.roster.tagged('orbitalFx') as Iterable<Actor>) {
                 if (!fx.alive) continue;
                 fx.data.timer -= dt;
@@ -453,6 +484,16 @@ export const Orbital = {
                 fx.height *= 1 + dt * 1.5;
                 fx.rot += dt * 0.4;
                 if (fx.data.timer <= 0) fx.destroy();
+            }
+            for (const d of game.roster.tagged('orbitalDebris') as Iterable<Actor>) {
+                if (!d.alive) continue;
+                d.data.timer -= dt;
+                d.data.vy += 260 * dt;
+                d.x += d.data.vx * dt;
+                d.y += d.data.vy * dt;
+                d.rot += dt * 3.8;
+                d.alpha = Math.max(0, d.data.timer / Math.max(0.01, d.data.phase));
+                if (d.data.timer <= 0) d.destroy();
             }
 
             // Ejection transition sequence -> Story cutscene -> Part 2 ground platformer
@@ -542,19 +583,25 @@ export const Orbital = {
                 }
             }
 
-            // Mystery pursuit warship bonus during Wave 1
+            // Mystery saucer bonus during Wave 1
             if (wave === 1) {
                 mysteryCooldown -= dt;
                 if (mysteryCooldown <= 0) {
                     mysteryCooldown = 11.5;
                     const fromLeft = game.rng.int(0, 1) === 0;
-                    const mystery = spawnActor({
+                    const mysteryPool = [
+                        { texture: 'white-disc-saucer', w: 84, h: 40 },
+                        { texture: 'sleek-stealth-saucer', w: 88, h: 31 },
+                        { texture: 'notched-attack-saucer', w: 84, h: 40 },
+                    ];
+                    const pick = mysteryPool[effectIndex % mysteryPool.length] ?? mysteryPool[0]!;
+                    spawnActor({
                         id: `orb-misterio-${++effectIndex}`,
-                        texture: 'nave-alienigena-aerea',
+                        texture: pick.texture,
                         x: fromLeft ? -48 : W + 48,
                         y: 102,
-                        width: 88,
-                        height: 64,
+                        width: pick.w,
+                        height: pick.h,
                         layer: 'world',
                         tags: ['orbitalMystery'],
                         kind: 'orbitalMystery',
@@ -562,7 +609,6 @@ export const Orbital = {
                         scoreValue: 600,
                         vx: fromLeft ? 210 : -210,
                     });
-                    mystery.sx = fromLeft ? -1 : 1;
                 }
             }
             for (const m of game.roster.tagged('orbitalMystery') as Iterable<Actor>) {
@@ -613,6 +659,7 @@ export const Orbital = {
                         award(alien.data.scoreValue);
                         run.kills++;
                         showExplosion(ax, ay, false);
+                        if (alien.data.maxHp > 1) spawnDebrisBurst(ax, ay, 2);
                         burstAt(ax, ay, 10, ['#fff6bf', '#ff9d2e', '#66ff99']);
                         playCrewSfx('ship-explosion', 'explosao', { volume: 0.56, minGapMs: 70 });
                         if (game.rng.int(1, 7) === 1) spawnOrbitalPickup(ax, ay);
@@ -654,6 +701,7 @@ export const Orbital = {
                         award(flagship.data.scoreValue);
                         run.bossParts++;
                         showExplosion(fx, fy, true);
+                        spawnDebrisBurst(fx, fy, 6);
                         burstAt(fx, fy, 36, ['#fff6bf', '#ff9d2e', '#ff5a5a']);
                         playCrewSfx('ship-explosion', 'explosao', { volume: 0.85 });
                         game.feel.shake(10, 0.4);

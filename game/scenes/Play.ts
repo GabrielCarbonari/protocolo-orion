@@ -667,8 +667,16 @@ export const Play = {
         function updateLeftHunters(dt: number): void {
             if (stage !== 1 || bossStarted || stageOneEvacZone || stageWon) return;
             const slots = [
-                { offsetX: 118, baseY: 138, interval: 2.35, textures: ['nave-alienigena-aerea', 'drone-batedor'] as const, sizes: [[86, 62], [66, 50]] as const },
-                { offsetX: 244, baseY: 184, interval: 2.95, textures: ['bombardeiro-de-mergulho', 'disco-voador-blindado'] as const, sizes: [[62, 64], [86, 66]] as const },
+                {
+                    offsetX: 118, baseY: 138, interval: 2.35,
+                    textures: ['alien-pilot-saucer', 'heavy-scout-saucer', 'sleek-stealth-saucer', 'white-disc-saucer', 'nave-alienigena-aerea'] as const,
+                    sizes: [[78, 50], [82, 36], [86, 30], [82, 40], [86, 62]] as const,
+                },
+                {
+                    offsetX: 244, baseY: 184, interval: 2.95,
+                    textures: ['brain-alien-ufo', 'winged-interceptor-saucer', 'blue-war-saucer', 'finned-attack-saucer', 'notched-attack-saucer', 'bombardeiro-de-mergulho'] as const,
+                    sizes: [[78, 52], [88, 30], [84, 35], [82, 46], [82, 40], [62, 64]] as const,
+                },
             ];
             const activeHunters = [...game.roster.tagged('leftHunter') as Iterable<Actor>].filter(a => a.alive);
             for (let slotIndex = 0; slotIndex < slots.length; slotIndex++) {
@@ -695,7 +703,7 @@ export const Play = {
                             scoreValue: 350,
                             cooldown: 1.3 + slotIndex * 0.85,
                         });
-                        if (texture !== 'disco-voador-blindado') {
+                        if (texture === 'nave-alienigena-aerea' || texture === 'bombardeiro-de-mergulho') {
                             hunter.sx = -1;
                             hunter.rot = 0.24;
                         }
