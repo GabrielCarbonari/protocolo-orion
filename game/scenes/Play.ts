@@ -1381,7 +1381,7 @@ export const Play = {
                         crouched = dropHeld;
                         if (platform.data.kind === 'bridge' && platform.data.phase === 0) {
                             platform.data.phase = 1;
-                            platform.data.timer = 0.9;
+                            platform.data.timer = 1.15;
                             game.sound.play('aviso');
                         }
                         break;

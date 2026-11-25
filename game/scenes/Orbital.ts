@@ -606,7 +606,7 @@ export const Orbital = {
                     id: `orb-misterio-${++effectIndex}`,
                     texture: 'notched-attack-saucer',
                     x: fromLeft ? -48 : W + 48,
-                    y: 102,
+                    y: 112,
                     width: 86,
                     height: 42,
                     layer: 'world',
